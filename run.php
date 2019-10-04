@@ -5,8 +5,8 @@ require_once __DIR__ . '/Sweeper/ShiftGearboxsoftware.php';
 use Sweeper\ShiftGearboxsoftware;
 
 try {
-	$email = 'sergey.4.game@gmail.com';
-	$password = 'n8#S_KW0';
+	$email = '';
+	$password = '';
 	$key = 'WHKTJ-HT5ZB-9WJKW-3J3J3-3X3K6';
 
 	$shift = new ShiftGearboxsoftware($email, $password);
