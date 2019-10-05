@@ -10,10 +10,10 @@ use LogicException;
 
 class Shift
 {
-	public const KEY_STATUS_OK = 1;
-	public const KEY_STATUS_NOT_EXIST = 2;
-	public const KEY_STATUS_EXPIRED = 3;
-	public const KEY_STATUS_UNDEFINED = 4;
+	public const CODE_STATUS_OK = 1;
+	public const CODE_STATUS_NOT_EXIST = 2;
+	public const CODE_STATUS_EXPIRED = 3;
+	public const CODE_STATUS_UNDEFINED = 4;
 
 	protected const SERVICE_TYPE = 'epic';
 	protected const URL_BASE = 'https://shift.gearboxsoftware.com';
@@ -222,13 +222,13 @@ class Shift
 
 		if (preg_match('/^<h2>Borderlands 3<\/h2>\s*<form/', $response)) {
 			$this->proceedWithCodeRedemption($response);
-			$status = self::KEY_STATUS_OK;
+			$status = self::CODE_STATUS_OK;
 		} elseif ('This SHiFT code has expired' === $response) {
-			$status = self::KEY_STATUS_EXPIRED;
+			$status = self::CODE_STATUS_EXPIRED;
 		} elseif ('This SHiFT code does not exist' === $response) {
-			$status = self::KEY_STATUS_NOT_EXIST;
+			$status = self::CODE_STATUS_NOT_EXIST;
 		} else {
-			$status = self::KEY_STATUS_UNDEFINED;
+			$status = self::CODE_STATUS_UNDEFINED;
 		}
 
 		return $status;
