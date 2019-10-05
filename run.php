@@ -1,27 +1,27 @@
 <?php
 
-require_once __DIR__ . '/Sweeper/ShiftGearboxsoftware.php';
+require_once __DIR__ . '/Sweeper/Shift.php';
 
-use Sweeper\ShiftGearboxsoftware;
+use Sweeper\Shift;
 
 try {
 	$email = '';
 	$password = '';
 	$key = 'WHKTJ-HT5ZB-9WJKW-3J3J3-3X3K6';
 
-	$shift = new ShiftGearboxsoftware($email, $password);
+	$shift = new Shift($email, $password);
 	$result = $shift->useCode($key);
 	switch ($result) {
-		case ShiftGearboxsoftware::KEY_STATUS_OK:
+		case Shift::KEY_STATUS_OK:
 			echo 'KEY_STATUS_OK';
 			break;
-		case ShiftGearboxsoftware::KEY_STATUS_EXPIRED:
+		case Shift::KEY_STATUS_EXPIRED:
 			echo 'KEY_STATUS_EXPIRED';
 			break;
-		case ShiftGearboxsoftware::KEY_STATUS_NOT_EXIST:
+		case Shift::KEY_STATUS_NOT_EXIST:
 			echo 'KEY_STATUS_NOT_EXIST';
 			break;
-		case ShiftGearboxsoftware::KEY_STATUS_UNDEFINED:
+		case Shift::KEY_STATUS_UNDEFINED:
 			echo 'KEY_STATUS_UNDEFINED';
 			break;
 	}

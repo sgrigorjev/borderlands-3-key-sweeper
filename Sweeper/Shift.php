@@ -8,7 +8,7 @@ use DOMNodeList;
 use DOMXpath;
 use LogicException;
 
-class ShiftGearboxsoftware
+class Shift
 {
 	public const KEY_STATUS_OK = 1;
 	public const KEY_STATUS_NOT_EXIST = 2;
@@ -27,35 +27,56 @@ class ShiftGearboxsoftware
 		'Referer: https://shift.gearboxsoftware.com/home',
 		'Upgrade-Insecure-Requests: 1'
 	];
-	protected const COOKIE_FILE = __DIR__ . '/cookie.txt';
-	protected const COOKIE_AUTH_LIST = ['_session_id', 'si'];
 
-	protected $cookies = [];
+	/**
+	 * @var resource
+	 */
+	protected $sh;
 
 	public function __construct(string $email, string $password)
 	{
+		$this->setupShareConnection();
 		$formData = $this->buildFormData($email, $password);
 		$formData['user[email]'] = $email;
 		$formData['user[password]'] = $password;
 		$this->auth($formData);
 	}
 
+	public function __destruct()
+	{
+		$this->closeShareConnection();
+	}
+
+	protected function setupShareConnection() : void
+	{
+		$this->sh = curl_share_init();
+		curl_share_setopt($this->sh, CURLSHOPT_SHARE, CURL_LOCK_DATA_COOKIE);
+	}
+
+	protected function closeShareConnection() : void
+	{
+		curl_share_close($this->sh);
+	}
+
 	protected function loadPageSource() : string
 	{
 		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_SHARE, $this->sh);
+		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 		curl_setopt($ch, CURLOPT_URL, self::URL_BASE . self::URL_HOME_PATH);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT);
-		curl_setopt($ch, CURLOPT_COOKIEJAR, self::COOKIE_FILE);
-		//curl_setopt($ch, CURLOPT_COOKIEFILE, self::COOKIE_FILE);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, self::REQUEST_DEFAULT_HEADERS);
-		$source = curl_exec($ch);
+		$rawResponse = curl_exec($ch);
+		$errno = curl_errno($ch);
+		$error = curl_error($ch);
+		curl_close($ch);
 
-		if (curl_errno($ch)) {
-			throw new LogicException('Page load error: ' . curl_error($ch), curl_errno($ch));
+		if ($errno) {
+			throw new LogicException('Page load error: ' . $error, $errno);
 		}
 
-		return $source;
+		return $rawResponse;
 	}
 
 	protected function buildFormData(string $email, string $password) : array
@@ -85,49 +106,31 @@ class ShiftGearboxsoftware
 	protected function auth(array $data)
 	{
 		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_SHARE, $this->sh);
 		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 		curl_setopt($ch, CURLOPT_URL, self::URL_BASE . self::URL_SESSION_PATH);
-		curl_setopt($ch, CURLOPT_HEADER, true);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT);
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-		curl_setopt($ch, CURLOPT_COOKIEJAR, self::COOKIE_FILE);
-		curl_setopt($ch, CURLOPT_COOKIEFILE, self::COOKIE_FILE);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge(self::REQUEST_DEFAULT_HEADERS, [
-			'Content-Type: application/x-www-form-urlencoded',
-		]));
-		$source = curl_exec($ch);
+		curl_exec($ch);
+		$errno = curl_errno($ch);
+		$error = curl_error($ch);
+		curl_close($ch);
 
-		if (curl_errno($ch)) {
-			throw new LogicException('Submit auth form error: ' . curl_error($ch), curl_errno($ch));
-		}
-
-		$lines = explode("\r\n", $source);
-		foreach ($lines as $line) {
-			list($name, $value) = explode(":", $line, 2);
-			if ('Set-Cookie' === $name) {
-				list($rawCookie,) = explode(";", trim($value), 2);
-				list($cookieName, $cookieValue) = explode("=", $rawCookie, 2);
-				$this->cookies[$cookieName] = $cookieValue;
-			}
-		}
-
-		foreach (self::COOKIE_AUTH_LIST as $authCookieName) {
-			if (!array_key_exists($authCookieName, $this->cookies)) {
-				throw new LogicException(sprintf("Auth error. Cookie %s is missing", $authCookieName));
-			}
+		if ($errno) {
+			throw new LogicException('Submit auth form error: ' . $error, $errno);
 		}
 	}
 
 	public function useCode($code)
 	{
 		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_SHARE, $this->sh);
+		curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 		curl_setopt($ch, CURLOPT_URL, self::URL_BASE . self::URL_CODE_PATH . '?' . http_build_query(['code' => $code]));
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_TIMEOUT, self::REQUEST_TIMEOUT);
-		curl_setopt($ch, CURLOPT_COOKIEJAR, self::COOKIE_FILE);
-		curl_setopt($ch, CURLOPT_COOKIEFILE, self::COOKIE_FILE);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge(self::REQUEST_DEFAULT_HEADERS, [
 			'X-Requested-With: XMLHttpRequest'
 		]));
@@ -140,6 +143,9 @@ class ShiftGearboxsoftware
 		$response = trim($source);
 
 		switch ($response) {
+			case '??? OK ???':
+				$status = self::KEY_STATUS_OK;
+				break;
 			case 'This SHiFT code has expired':
 				$status = self::KEY_STATUS_EXPIRED;
 				break;
