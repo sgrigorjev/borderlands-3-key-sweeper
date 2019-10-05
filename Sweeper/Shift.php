@@ -18,6 +18,7 @@ class Shift
 	protected const SERVICE_TYPE = 'epic';
 	protected const URL_BASE = 'https://shift.gearboxsoftware.com';
 	protected const URL_HOME_PATH = '/home';
+	protected const URL_ACCOUNT_PATH = '/account';
 	protected const URL_SESSION_PATH = '/sessions';
 	protected const URL_CODE_PATH = '/entitlement_offer_codes';
 	protected const URL_REDEMPTIONS_PATH = '/code_redemptions';
@@ -75,7 +76,7 @@ class Shift
 		curl_close($ch);
 
 		if ($errno) {
-			throw new LogicException('Page load error: ' . $error, $errno);
+			throw new LogicException('Shift home page load error: ' . $error, $errno);
 		}
 
 		return $rawResponse;
@@ -92,7 +93,7 @@ class Shift
 
 		/** @var $inputs DOMNodeList */
 		if (!$inputs->length) {
-			throw new LogicException('Form element not found or empty');
+			throw new LogicException('Shift auth form element not found or empty');
 		}
 
 		$data = [];
@@ -118,10 +119,15 @@ class Shift
 		curl_exec($ch);
 		$errno = curl_errno($ch);
 		$error = curl_error($ch);
+		$location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
 		curl_close($ch);
 
 		if ($errno) {
-			throw new LogicException('Submit auth form error: ' . $error, $errno);
+			throw new LogicException('Shift submit auth form error: ' . $error, $errno);
+		}
+
+		if (self::URL_BASE . self::URL_ACCOUNT_PATH !== $location) {
+			throw new LogicException('Shift submit auth form error: login or password might be wrong');
 		}
 	}
 
@@ -133,7 +139,7 @@ class Shift
 		$forms = $doc->getElementsByTagName('form');
 
 		if (!$forms->length) {
-			throw new LogicException('Code redemption error: Form elements not found');
+			throw new LogicException('Shift code redemption error: Form elements not found');
 		}
 
 		$data = [];
@@ -154,7 +160,7 @@ class Shift
 		}
 
 		if (empty($data)) {
-			throw new LogicException('Code redemption error: Form is empty');
+			throw new LogicException('Shift code redemption error: Form is empty');
 		}
 
 		$ch = curl_init();
@@ -173,11 +179,11 @@ class Shift
 		curl_close($ch);
 
 		if ($errno) {
-			throw new LogicException('Code redemption error: ' . $error, $errno);
+			throw new LogicException('Shift code redemption error: ' . $error, $errno);
 		}
 
 		if (200 !== $responseCode) {
-			throw new LogicException('Code redemption error: response code ' . $responseCode . ' is unexpected');
+			throw new LogicException('Shift code redemption error: response code ' . $responseCode . ' is unexpected');
 		}
 
 		$doc->loadHTML($source, LIBXML_NOERROR);
@@ -185,11 +191,11 @@ class Shift
 		$redemptionStatus = $doc->getElementById('check_redemption_status');
 
 		if (!$redemptionStatus) {
-			throw new LogicException('Code redemption error: element #check_redemption_status not found');
+			throw new LogicException('Shift code redemption error: element #check_redemption_status not found');
 		}
 
 		if ('Please wait' !== trim($redemptionStatus->nodeValue)) {
-			throw new LogicException(sprintf('Code redemption error: redemption status is "%s", instead of expected "%s"', trim($redemptionStatus->nodeValue), 'Please wait'));
+			throw new LogicException(sprintf('Shift code redemption error: redemption status is "%s", instead of expected "%s"', trim($redemptionStatus->nodeValue), 'Please wait'));
 		}
 	}
 
@@ -211,11 +217,11 @@ class Shift
 		curl_close($ch);
 
 		if ($errno) {
-			throw new LogicException('Submit code error: ' . $error, $errno);
+			throw new LogicException('Shift submit code error: ' . $error, $errno);
 		}
 
 		if (200 !== $responseCode) {
-			throw new LogicException('Submit code error: response code ' . $responseCode . ' is unexpected');
+			throw new LogicException('Shift submit code error: response code ' . $responseCode . ' is unexpected');
 		}
 
 		$response = trim($source);

@@ -39,7 +39,7 @@ class Twitter
 		curl_close($ch);
 
 		if ($errno) {
-			throw new LogicException('Page load error: ' . $error, $errno);
+			throw new LogicException('Twitter error: Page load error: ' . $error, $errno);
 		}
 
 		return $rawResponse;
@@ -64,7 +64,7 @@ class Twitter
 
 		/** @var $lis DOMNodeList */
 		if (!$lis->length) {
-			throw new LogicException('Form element not found or empty');
+			throw new LogicException('Twitter error: Tweets not found');
 		}
 
 		$codes = [];
@@ -88,10 +88,12 @@ class Twitter
 			$tweetCodes = $this->fetchCodes($div->nodeValue);
 
 			if (!empty($tweetCodes)) {
-				$codes[] = [
-					"timestamp" => (int) $tweetTimestamp,
-					"codes" => $tweetCodes
-				];
+				foreach ($tweetCodes as $tweetCode) {
+					$codes[] = [
+						"timestamp" => (int) $tweetTimestamp,
+						"code" => $tweetCode
+					];
+				}
 			}
 		}
 
