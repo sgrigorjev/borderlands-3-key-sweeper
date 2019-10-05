@@ -7,7 +7,7 @@ use Sweeper\Shift;
 try {
 	$email = '';
 	$password = '';
-	$key = 'WHKTJ-HT5ZB-9WJKW-3J3J3-3X3K6';
+	$key = 'W9CTT-95KSJ-9CJK5-BJBB3-HSWC5';
 
 	$shift = new Shift($email, $password);
 	$result = $shift->useCode($key);
