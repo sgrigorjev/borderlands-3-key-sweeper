@@ -1,6 +1,6 @@
 Create *.password* file:
 ```
-echo "email@domain:password" > .password
+echo "email@domain:password" >> .password
 ```
 
 Run:
