@@ -5,5 +5,5 @@ echo "email@domain:password" >> .password
 
 Run:
 ```
-php -f run.php > logs/error.log 2>&1
+php -f /path/to/run.php > /path/to/logs/error.log 2>&1
 ```
