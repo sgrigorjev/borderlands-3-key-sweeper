@@ -10,10 +10,10 @@ use LogicException;
 
 class Shift
 {
-	public const CODE_STATUS_OK = 1;
-	public const CODE_STATUS_NOT_EXIST = 2;
-	public const CODE_STATUS_EXPIRED = 3;
-	public const CODE_STATUS_UNDEFINED = 4;
+	public const CODE_STATUS_OK = 'OK';
+	public const CODE_STATUS_NOT_EXIST = 'NOT_EXIST';
+	public const CODE_STATUS_EXPIRED = 'EXPIRED';
+	public const CODE_STATUS_UNDEFINED = 'UNDEFINED';
 
 	protected const SERVICE_TYPE = 'epic';
 	protected const URL_BASE = 'https://shift.gearboxsoftware.com';
